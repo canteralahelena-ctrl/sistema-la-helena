@@ -1,0 +1,16 @@
+{
+  "telegram_bot_token": "PEGAR_TOKEN_DE_BOTFATHER",
+  "openai_api_key": "PEGAR_OPENAI_API_KEY_OPCIONAL",
+  "transcription_model": "gpt-4o-mini-transcribe",
+  "ffmpeg_path": "ffmpeg",
+  "allowed_chat_ids": [],
+  "telegram_users": {},
+  "access_users": {},
+  "cheque_alerts": {
+    "enabled": true,
+    "hour": 8,
+    "warning_days": 3
+  },
+  "powershell": "powershell",
+  "max_text_chars": 3500
+}

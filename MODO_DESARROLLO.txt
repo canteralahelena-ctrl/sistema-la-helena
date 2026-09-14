@@ -1,0 +1,13 @@
+MODO DESARROLLO - SISTEMA LA HELENA
+
+Esta carpeta es una copia paralela de desarrollo.
+
+No debe utilizar el token productivo de Telegram.
+No debe iniciar alertas automaticas.
+No debe escribir en el servidor.
+No debe registrar ni ejecutar tareas programadas.
+No debe reemplazar la carpeta productiva work hasta completar validaciones.
+
+Los lanzadores de inicio copiados fueron renombrados con el sufijo _DESHABILITADO_V2 para reducir el riesgo de inicio accidental.
+
+La configuracion real copiada puede contener credenciales productivas. No usarla desde este entorno hasta integrar config/environment.json en una etapa posterior.

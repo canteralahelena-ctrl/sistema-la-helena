@@ -1,0 +1,49 @@
+{
+  "environment": "development",
+  "telegram_enabled": false,
+  "automatic_alerts_enabled": false,
+  "server_writes_enabled": false,
+  "scheduled_tasks_enabled": false,
+  "use_local_database_only": true,
+  "local_database_path": "data/test_database/CANTERA_LA_HELENA_TEST.accdb",
+  "allow_database_writes": false,
+  "paths": {
+    "scripts": ".",
+    "outputs": "outputs",
+    "logs": "logs",
+    "data": "data",
+    "private_config": "telegram_bot_config.json",
+    "private_config_example": "telegram_bot_config.example.json",
+    "local_database": ""
+  },
+  "executables": {
+    "powershell": "powershell",
+    "ffmpeg": "ffmpeg",
+    "lock_port": 47825
+  },
+  "private_config": {
+    "email_config": "email_config.json",
+    "email_config_example": "email_config.example.json"
+  },
+  "user_config": {
+    "telegram_users": "telegram_usuarios.json",
+    "telegram_pending_users": "telegram_pending_users.json"
+  },
+  "business_config": {
+    "intent_dictionary": "diccionario_intenciones.json"
+  },
+  "databases": {
+    "local": "",
+    "server_ref": ""
+  },
+  "timeouts": {
+    "default_script_seconds": 180,
+    "long_script_seconds": 240,
+    "export_script_seconds": 300,
+    "audio_conversion_seconds": 120,
+    "telegram_call_seconds": 120,
+    "telegram_update_seconds": 30,
+    "payment_seconds": 60,
+    "dashboard_cache_ttl_seconds": 600
+  }
+}

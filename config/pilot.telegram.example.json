@@ -1,0 +1,4 @@
+{
+  "telegram_bot_token": "USAR_SOLO_TOKEN_DE_PRUEBA_MEDIANTE_VARIABLE_DE_ENTORNO",
+  "nota": "Copiar como pilot.telegram.json sin reutilizar secretos de produccion."
+}

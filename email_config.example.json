@@ -1,0 +1,9 @@
+{
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "use_ssl": true,
+  "from": "remitente@example.com",
+  "to": "destinatario@example.com",
+  "username": "remitente@example.com",
+  "app_password": "REEMPLAZAR_CON_APP_PASSWORD"
+}

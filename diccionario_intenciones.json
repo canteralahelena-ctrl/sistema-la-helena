@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "intenciones": [
+    {
+      "id": "mejores_clientes",
+      "descripcion": "Ranking de mejores clientes",
+      "script": "work/ranking_clientes.ps1",
+      "parametros_base": {
+        "Accion": "mejores",
+        "Top": 10
+      },
+      "frases": [
+        "top clientes",
+        "top 10 clientes",
+        "mejores clientes",
+        "ranking mejores clientes",
+        "clientes que mas compran",
+        "clientes mas importantes",
+        "top 10 de mayo"
+      ]
+    },
+    {
+      "id": "peores_clientes",
+      "descripcion": "Ranking de peores clientes",
+      "script": "work/ranking_clientes.ps1",
+      "parametros_base": {
+        "Accion": "peores",
+        "Top": 10
+      },
+      "frases": [
+        "peores clientes",
+        "ranking peores clientes",
+        "clientes de riesgo",
+        "clientes problematicos"
+      ]
+    },
+    {
+      "id": "mayores_deudores",
+      "descripcion": "Top mayores deudores",
+      "script": "work/ranking_clientes.ps1",
+      "parametros_base": {
+        "Accion": "mayores-deudores",
+        "Top": 10
+      },
+      "frases": [
+        "mayores deudores",
+        "top deudores",
+        "clientes que mas deben",
+        "quien me debe mas",
+        "principal deudor",
+        "mayor deudor",
+        "cliente que mas debe"
+      ]
+    },
+    {
+      "id": "analisis_categorias",
+      "descripcion": "Analisis de ventas por categorias",
+      "script": "work/analisis_categorias.ps1",
+      "parametros_base": {},
+      "frases": [
+        "ventas por categoria",
+        "analisis de categorias",
+        "ventas de servicios",
+        "ventas de bentonita",
+        "ventas de aridos",
+        "ventas de gravas",
+        "Ventas entre 01/05/2026 al 15/05/2026"
+      ]
+    },
+    {
+      "id": "iva_mensual",
+      "descripcion": "Reporte IVA mensual",
+      "script": "work/iva_mensual.ps1",
+      "parametros_base": {},
+      "frases": [
+        "iva mensual",
+        "iva de mayo",
+        "iva de junio",
+        "reporte iva"
+      ]
+    },
+    {
+      "id": "cheques",
+      "descripcion": "Gestion de cheques y eCheq",
+      "script": "work/gestion_cheques.ps1",
+      "parametros_base": {
+        "Accion": "resumen"
+      },
+      "frases": [
+        "cheques",
+        "cheques en caja",
+        "cheques depositables",
+        "vencimiento de cheques",
+        "echeq"
+      ]
+    },
+    {
+      "id": "clientes_factura_ultima",
+      "descripcion": "Ultima factura cliente",
+      "script": "work/facturas_pdf.ps1",
+      "parametros_base": {
+        "Accion": "ultimas-cliente",
+        "Cantidad": 1
+      },
+      "frases": [
+        "Quiero última factura cim"
+      ],
+      "patrones": [
+        {
+          "patron": "ultima factura {cliente}",
+          "intencion": "clientes_factura_ultima",
+          "parametros": [
+            "cliente"
+          ],
+          "creado": "2026-07-02",
+          "ultimo_uso": "2026-09-14",
+          "usos": 40,
+          "alias": []
+        }
+      ]
+    },
+    {
+      "id": "clientes_saldo",
+      "descripcion": "Consultar saldo de cliente",
+      "script": "work/consultas_rapidas.ps1",
+      "parametros_base": {
+        "Comando": "cliente"
+      },
+      "frases": [
+        "Estado de cuenta Maldonado adrian"
+      ],
+      "patrones": [
+        {
+          "patron": "cuanto debe {cliente}",
+          "intencion": "clientes_saldo",
+          "parametros": [
+            "cliente"
+          ],
+          "creado": "2026-06-26",
+          "ultimo_uso": "2026-06-30",
+          "usos": 8,
+          "alias": [
+            "cuánto debe {cliente}"
+          ]
+        }
+      ],
+      "frases_estadisticas": {}
+    },
+    {
+      "id": "ventas_rapidas",
+      "descripcion": "Ventas rapidas",
+      "script": "work/analisis_categorias.ps1",
+      "parametros_base": {
+        "Tipos": "Ambos"
+      },
+      "frases": [
+        "Ventas de ayer"
+      ],
+      "frases_estadisticas": {
+        "ventas de ayer": {
+          "creado": "2026-06-30",
+          "usos": 5,
+          "ultimo_uso": "2026-08-15"
+        }
+      }
+    }
+  ]
+}

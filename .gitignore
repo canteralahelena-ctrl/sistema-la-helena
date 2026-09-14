@@ -1,0 +1,82 @@
+﻿# Credenciales y configuración privada
+/.env
+/.env.*
+!/.env.example
+/telegram_bot_config.json
+/email_config.json
+/telegram_usuarios.json
+/telegram_pending_users.json
+/config/environment.json
+/config/pilot.secrets.json
+/config/pilot.telegram.json
+/config/pilot.telegram_usuarios.json
+*.secrets.json
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Bases Access y bloqueos
+*.accdb
+*.mdb
+*.laccdb
+
+# Datos, cachés y estados operativos
+/data/
+/logs/
+/outputs/
+/cache/
+/telegram_voice/
+*.log
+*.jsonl
+*.pid
+/*_estado.json
+/*_estado_*.json
+
+# Documentos y datos generados
+*.pdf
+*.zip
+*.xls
+*.xlsx
+*.mp3
+*.oga
+*.ogg
+*.wav
+
+# CSV generados conocidos
+/ventas_*_mayo_2026*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Temporales y backups
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*~
+~$*
+Thumbs.db
+.DS_Store
+
+# Infraestructura experimental local
+/orchestration/
+/orquestar_desarrollo.ps1
+/tests/test_orchestration.py
+/docs/ORQUESTACION_MULTIAGENTE.md
+/reports/
+/tools/comparar_work_work_v2.py
+
+# Configuración local de editores
+.vscode/
+.idea/
+
+# Documentacion interna sensible
+/USUARIOS_Y_PERMISOS.md
