@@ -14,7 +14,7 @@ if ($env:HELENA_PILOT_MODE -eq "1") {
 
 $root = Split-Path -Parent $PSScriptRoot
 $outputsDir = if ($env:HELENA_OUTPUTS_DIR) { $env:HELENA_OUTPUTS_DIR } else { Join-Path $PSScriptRoot "outputs" }
-$python = "C:\USUARIO_EJEMPLO\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+$python = if ($env:HELENA_PYTHON_EXECUTABLE) { $env:HELENA_PYTHON_EXECUTABLE } else { "python" }
 $estadoPath = Join-Path $PSScriptRoot "auditoria_semanal_maxi_estado.json"
 $auditUsers = @(
     [pscustomobject]@{ Id = 1; Nombre = "Gaston"; Label = "Usuario 1 / Gaston"; Prefix = "auditoria_usuario_1_gaston" },

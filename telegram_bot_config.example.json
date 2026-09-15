@@ -11,6 +11,10 @@
     "hour": 8,
     "warning_days": 3
   },
+  "dashboard_gerencial_alerts": {
+    "enabled": true,
+    "hour": 10
+  },
   "powershell": "powershell",
   "max_text_chars": 3500
 }

@@ -145,6 +145,19 @@ Las pruebas existentes validan valores seguros de entorno, rutas portables, comp
 
 `MODO_DESARROLLO.txt` indica que esta carpeta no debe usar token productivo de Telegram, no debe iniciar alertas automaticas, no debe escribir en el servidor, no debe registrar tareas programadas y no debe reemplazar la carpeta productiva `work` hasta completar validaciones.
 
+## Candidato de automatizaciones
+
+Se preparo un punto de entrada de ejecucion unica y un instalador reversible para
+las tres automatizaciones pendientes. Auditoria reutiliza
+`auditoria_semanal_maxi.ps1`; cheques/eCheq reutiliza `cheques.alertas`; y el
+Resumen Gerencial reutiliza `handle_dashboard_gerencial`. El instalador propone
+auditoria los lunes 08:00, cheques diariamente 08:00 y resumen los lunes 10:00.
+
+El candidato permanece inerte en `development` y en modo piloto. Tanto el
+registro como cada ejecucion exigen explicitamente
+`scheduled_tasks_enabled=true` y `automatic_alerts_enabled=true`. La habilitacion
+y las pruebas reales quedan pendientes de Windows, Access, SMTP y Telegram.
+
 ## Produccion protegida
 
 Produccion es:
