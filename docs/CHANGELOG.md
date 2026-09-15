@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-15 - Candidato de automatizaciones controladas
+
+- Se agrego un lanzador unico que delega auditoria, vencimientos de cheques/eCheq
+  y Resumen Gerencial en las implementaciones ya validadas.
+- Se agrego el registro reversible de tres tareas de Windows con los horarios ya
+  documentados o configurados.
+- Se conservaron los bloqueos de `development` y modo piloto y se exigieron los
+  flags centrales antes de registrar o ejecutar.
+- Se completo la plantilla publica de Telegram con la configuracion del Resumen
+  Gerencial semanal, sin incorporar secretos.
+
 Historial cronologico construido solo con informacion existente en los documentos del proyecto.
 
 Documentos relacionados:

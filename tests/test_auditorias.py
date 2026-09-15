@@ -110,6 +110,8 @@ class AuditoriasTests(unittest.TestCase):
         self.assertIn("Find-AuditDocumentPdf", engine)
         self.assertIn("NO_COMPARADO_ANULADA", engine)
         self.assertNotIn('Join-Path $root "work\\cache"', engine)
+        self.assertIn("HELENA_PYTHON_EXECUTABLE", orchestrator)
+        self.assertNotIn("codex-runtimes", orchestrator)
 
     def test_motor_es_solo_lectura(self):
         engine = (ROOT / "auditoria_usuario_3.ps1").read_text(encoding="utf-8-sig").upper()

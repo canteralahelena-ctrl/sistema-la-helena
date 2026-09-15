@@ -14,6 +14,11 @@ Documentos relacionados:
 
 ## Alta prioridad
 
+- Validar en Windows el candidato de las tres automatizaciones contra la copia
+  local Access y configuraciones privadas, primero por ejecucion manual y luego
+  mediante las tareas registradas. No declararlo productivo antes de comprobar
+  Access, SMTP y Telegram reales.
+
 - Repetir una tarea real con el orquestador en `-NoPublicar` después del ajuste
   de responsabilidades y revisar costos/tiempos antes de habilitar publicación
   automática habitual.
