@@ -41,15 +41,19 @@ class AccessReader:
         sql = select_sql(mapping)
         assert_read_only_sql(sql)
         cursor = self.connection.cursor()
-        cursor.execute(sql)
-        while True:
-            rows = cursor.fetchmany(batch_size)
-            if not rows:
-                break
-            yield [tuple(row) for row in rows]
-        cursor.close()
+        try:
+            cursor.execute(sql)
+            while True:
+                rows = cursor.fetchmany(batch_size)
+                if not rows:
+                    break
+                yield [tuple(row) for row in rows]
+        finally:
+            cursor.close()
 
     def __exit__(self, *_: object) -> None:
         if self.connection is not None:
-            self.connection.rollback()
-            self.connection.close()
+            try:
+                self.connection.rollback()
+            finally:
+                self.connection.close()

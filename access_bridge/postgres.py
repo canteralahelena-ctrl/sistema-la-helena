@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterable, Iterator
 
 from .catalog import TableMapping
 
@@ -76,7 +76,7 @@ class PostgresReplica:
         finally:
             cursor.close()
 
-    def replace_table(self, cursor: Any, mapping: TableMapping, batches: Sequence[list[tuple[Any, ...]]]) -> int:
+    def replace_table(self, cursor: Any, mapping: TableMapping, batches: Iterable[list[tuple[Any, ...]]]) -> int:
         cursor.execute(f'DELETE FROM replica."{mapping.target_table}"')
         total = 0
         statement = upsert_sql(mapping)

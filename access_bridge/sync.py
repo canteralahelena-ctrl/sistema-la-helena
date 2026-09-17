@@ -35,18 +35,18 @@ def fingerprint(path: Path) -> str:
 
 
 def run_sync(config: BridgeConfig, *, migrate: bool = True, reader_class: Any = AccessReader, replica_class: Any = PostgresReplica) -> dict[str, Any]:
-    refresh_local_copy(config)
     started = datetime.now(timezone.utc)
     counts: dict[str, int] = {}
     root = Path(__file__).resolve().parents[1]
     try:
+        refresh_local_copy(config)
         with reader_class(config.access_path) as access, replica_class(config.postgres_dsn) as postgres:
             if migrate:
                 postgres.migrate(root / "migrations")
             # One PostgreSQL transaction: a failed table leaves the previous snapshot intact.
             with postgres.sync_run() as cursor:
                 for mapping in MAPPINGS:
-                    batches = list(access.rows(mapping, config.batch_size))
+                    batches = access.rows(mapping, config.batch_size)
                     counts[mapping.target_table] = postgres.replace_table(cursor, mapping, batches)
                 cursor.execute(
                     "INSERT INTO replica.sync_runs(started_at, finished_at, status, source_fingerprint, row_counts) VALUES (%s,%s,'ok',%s,%s::jsonb)",

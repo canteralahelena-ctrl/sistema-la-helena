@@ -1,10 +1,10 @@
 param([string]$InstallDir = "$env:LOCALAPPDATA\LaHelenaAccessBridge")
 $ErrorActionPreference = "Stop"
-$root = $PSScriptRoot
+$appDir = Join-Path $InstallDir "app"
 $python = Join-Path $InstallDir ".venv\Scripts\python.exe"
 $config = Join-Path $InstallDir "bridge.json"
 if (-not (Test-Path $python) -or -not (Test-Path $config)) { throw "El puente no está instalado." }
-$env:PYTHONPATH = $root
+$env:PYTHONPATH = $appDir
 & $python -m access_bridge.cli sync --config $config
 if ($LASTEXITCODE) { throw "Falló la validación de sincronización." }
 & $python -m access_bridge.cli diagnose --config $config

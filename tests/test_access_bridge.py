@@ -66,6 +66,21 @@ def test_config_supports_windows_path_and_environment_dsn(tmp_path):
     assert redacted_dsn(loaded.postgres_dsn) == "postgresql://***:***@***/***"
 
 
+@pytest.mark.parametrize("value", ["false", 0, 1, None])
+def test_config_rejects_non_boolean_refresh_flag(tmp_path, value):
+    config = tmp_path / "bridge.json"
+    config.write_text(json.dumps({"access_path": "copy.accdb", "postgres_dsn": "postgresql://test", "refresh_before_sync": value}), encoding="utf-8")
+    with pytest.raises(ValueError, match="booleano"):
+        load_config(config)
+
+
+def test_config_rejects_invalid_batch_size(tmp_path):
+    config = tmp_path / "bridge.json"
+    config.write_text(json.dumps({"access_path": "copy.accdb", "postgres_dsn": "postgresql://test", "batch_size": 0}), encoding="utf-8")
+    with pytest.raises(ValueError, match="entero positivo"):
+        load_config(config)
+
+
 def test_migrations_define_expected_read_views_and_reader_guard():
     sql = "\n".join(path.read_text(encoding="utf-8") for path in sorted(Path("migrations").glob("*.sql")))
     for name in ("v_saldos_clientes", "v_mayores_deudores", "v_ventas_producto", "v_cliente_metricas", "v_cheques_vencimiento", "v_resumen_gerencial"):

@@ -41,14 +41,23 @@ def load_config(path: str | Path, environ: Mapping[str, str] | None = None) -> B
         raise ValueError("access_path debe indicar una copia local .accdb o .mdb.")
     if not dsn:
         raise ValueError("Falta HELENA_BRIDGE_POSTGRES_DSN o postgres_dsn.")
+    refresh_value = raw.get("refresh_before_sync", True)
+    if not isinstance(refresh_value, bool):
+        raise ValueError("refresh_before_sync debe ser booleano.")
+    try:
+        batch_size = int(raw.get("batch_size", 1000))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("batch_size debe ser un entero positivo.") from exc
+    if batch_size < 1:
+        raise ValueError("batch_size debe ser un entero positivo.")
     return BridgeConfig(
         access_path=access_path,
         postgres_dsn=dsn,
         refresh_script=resolve(raw.get("refresh_script")),
         source_access_path=resolve(raw.get("source_access_path")),
         log_path=resolve(raw.get("log_path")) or root / "bridge.log",
-        batch_size=max(1, int(raw.get("batch_size", 1000))),
-        refresh_before_sync=bool(raw.get("refresh_before_sync", True)),
+        batch_size=batch_size,
+        refresh_before_sync=refresh_value,
     )
 
 
