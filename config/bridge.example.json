@@ -1,0 +1,9 @@
+{
+  "access_path": "C:\\LaHelena\\data\\CANTERA_LOCAL.accdb",
+  "source_access_path": "C:\\RutaServidorMontada\\CANTERA_ORIGEN.accdb",
+  "refresh_script": "..\\actualizar_copia_base.ps1",
+  "postgres_dsn": "",
+  "log_path": "C:\\LaHelena\\logs\\access_bridge.log",
+  "batch_size": 1000,
+  "refresh_before_sync": true
+}
