@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
+import re
 from typing import Any, Iterable, Iterator
 
 from .catalog import TableMapping
@@ -11,6 +14,82 @@ TEXT_COLUMNS = {
     "razon_social", "cuit", "localidad", "producto", "unidad", "tipo", "numero",
     "id_cliente_texto", "estado", "banco", "observacion",
 }
+INTEGER_COLUMNS = {
+    "id_cliente", "id_producto", "id_comprobante", "id_detalle", "id_pago", "id_entrega",
+}
+DECIMAL_COLUMNS = {
+    "precio_unitario", "subtotal", "iva", "importe", "saldo", "cantidad", "monto",
+}
+DATE_COLUMNS = {"fecha", "fecha_cobro"}
+
+
+def _access_decimal(value: Any, column: str) -> Decimal | None:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return Decimal(str(value))
+
+    text = str(value).strip().replace("\u00a0", "").replace(" ", "").replace("$", "")
+    if not text:
+        return None
+    negative = text.startswith("(") and text.endswith(")")
+    if negative:
+        text = text[1:-1]
+    # Text fields in this Access database use es-AR: dot for thousands, comma for decimals.
+    if "," in text:
+        normalized = text.replace(".", "").replace(",", ".")
+    elif re.fullmatch(r"[+-]?\d{1,3}(?:\.\d{3})+", text):
+        normalized = text.replace(".", "")
+    else:
+        normalized = text
+    try:
+        number = Decimal(normalized)
+    except InvalidOperation as exc:
+        raise ValueError(f"{column}: número inválido en Access") from exc
+    return -number if negative else number
+
+
+def _access_datetime(value: Any, column: str) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime.combine(value, datetime.min.time())
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        pass
+    for pattern in ("%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(text, pattern)
+        except ValueError:
+            continue
+    raise ValueError(f"{column}: fecha inválida en Access")
+
+
+def normalize_value(column: str, value: Any) -> Any:
+    if value is None:
+        return None
+    if column in TEXT_COLUMNS:
+        return str(value)
+    if column in INTEGER_COLUMNS:
+        number = _access_decimal(value, column)
+        if number is None:
+            return None
+        if number != number.to_integral_value():
+            raise ValueError(f"{column}: entero inválido en Access")
+        return int(number)
+    if column in DECIMAL_COLUMNS:
+        return _access_decimal(value, column)
+    if column in DATE_COLUMNS:
+        return _access_datetime(value, column)
+    return value
 
 
 def upsert_sql(mapping: TableMapping) -> str:
@@ -80,13 +159,19 @@ class PostgresReplica:
         cursor.execute(f'DELETE FROM replica."{mapping.target_table}"')
         total = 0
         statement = upsert_sql(mapping)
-        for rows in batches:
-            normalized = [
-                tuple(str(value) if value is not None and column in TEXT_COLUMNS else value for column, value in zip(mapping.target_columns, row))
-                for row in rows
-            ]
-            cursor.executemany(statement, normalized)
-            total += len(rows)
+        iterator = iter(batches)
+        try:
+            for rows in iterator:
+                normalized = [
+                    tuple(normalize_value(column, value) for column, value in zip(mapping.target_columns, row))
+                    for row in rows
+                ]
+                cursor.executemany(statement, normalized)
+                total += len(rows)
+        finally:
+            close = getattr(iterator, "close", None)
+            if callable(close):
+                close()
         return total
 
     def __exit__(self, *_: object) -> None:
