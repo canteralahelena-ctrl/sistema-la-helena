@@ -33,10 +33,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Puente de lectura Access -> PostgreSQL")
     parser.add_argument("command", choices=("sync", "diagnose", "provision-reader"))
     parser.add_argument("--config", default="config/bridge.json")
+    parser.add_argument("--migrate", action="store_true", help="Aplicar migraciones administrativas antes del sync")
     args = parser.parse_args(argv)
     try:
         if args.command == "sync":
-            output = run_sync(load_config(args.config))
+            output = run_sync(load_config(args.config), migrate=args.migrate)
         elif args.command == "diagnose":
             output = diagnostic(args.config)
         else:
