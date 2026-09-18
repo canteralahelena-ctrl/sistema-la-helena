@@ -1,10 +1,10 @@
 CREATE SCHEMA IF NOT EXISTS replica;
 
 CREATE TABLE IF NOT EXISTS replica.clientes (
-  id_cliente bigint PRIMARY KEY, razon_social text NOT NULL, cuit text, localidad text
+  id_cliente bigint PRIMARY KEY, razon_social text, cuit text, localidad text
 );
 CREATE TABLE IF NOT EXISTS replica.productos (
-  id_producto bigint PRIMARY KEY, producto text NOT NULL, unidad text, precio_unitario numeric(18,4)
+  id_producto bigint PRIMARY KEY, producto text, unidad text, precio_unitario numeric(18,4)
 );
 CREATE TABLE IF NOT EXISTS replica.comprobantes (
   id_comprobante bigint PRIMARY KEY, id_cliente bigint, fecha timestamp, tipo text,
@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS replica.sync_runs (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, started_at timestamptz NOT NULL,
   finished_at timestamptz, status text NOT NULL, source_fingerprint text, row_counts jsonb NOT NULL DEFAULT '{}'::jsonb
 );
+
+-- Access histórico admite descripciones incompletas; la réplica conserva esos NULL sin inventar datos.
+ALTER TABLE replica.clientes ALTER COLUMN razon_social DROP NOT NULL;
+ALTER TABLE replica.productos ALTER COLUMN producto DROP NOT NULL;
 CREATE INDEX IF NOT EXISTS ix_comprobantes_cliente_fecha ON replica.comprobantes(id_cliente, fecha);
 CREATE INDEX IF NOT EXISTS ix_detalles_comprobante ON replica.comprobante_detalles(id_comprobante);
 CREATE INDEX IF NOT EXISTS ix_pagos_cliente_fecha ON replica.pagos(id_cliente_texto, fecha);
