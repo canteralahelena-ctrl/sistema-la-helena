@@ -34,7 +34,7 @@ def fingerprint(path: Path) -> str:
     return hashlib.sha256(f"{stat.st_size}:{stat.st_mtime_ns}".encode()).hexdigest()
 
 
-def run_sync(config: BridgeConfig, *, migrate: bool = True, reader_class: Any = AccessReader, replica_class: Any = PostgresReplica) -> dict[str, Any]:
+def run_sync(config: BridgeConfig, *, migrate: bool = False, reader_class: Any = AccessReader, replica_class: Any = PostgresReplica) -> dict[str, Any]:
     started = datetime.now(timezone.utc)
     counts: dict[str, int] = {}
     root = Path(__file__).resolve().parents[1]
