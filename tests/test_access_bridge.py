@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from access_bridge.access import AccessReader, assert_read_only_sql
 from access_bridge.catalog import MAPPINGS, select_sql
 from access_bridge.config import load_config, redacted_dsn
-from access_bridge.postgres import PostgresReplica, upsert_sql
+from access_bridge.postgres import PostgresReplica, normalize_value, upsert_sql
 
 
 def test_every_access_statement_is_select_only():
@@ -56,6 +57,37 @@ def test_postgres_mapping_normalizes_access_numbers_for_text_columns():
     count = replica.replace_table(Cursor(), mapping, [[(1, 2, None, "FC", 123, 10, 2.1, 12.1, 0)]])
     assert count == 1
     assert events[-1][0][4] == "123"
+
+
+
+def test_access_locale_numbers_are_normalized_before_postgres():
+    assert normalize_value("precio_unitario", "885,24") == Decimal("885.24")
+    assert normalize_value("importe", "1.234,56") == Decimal("1234.56")
+    assert normalize_value("saldo", "$ 1.234,56") == Decimal("1234.56")
+    assert normalize_value("cantidad", "1234.56") == Decimal("1234.56")
+    assert normalize_value("id_cliente", "775") == 775
+    assert normalize_value("numero", 123) == "123"
+    assert normalize_value("monto", "") is None
+
+
+def test_access_batch_generator_is_closed_when_postgres_rejects_a_row():
+    mapping = next(item for item in MAPPINGS if item.target_table == "productos")
+    events = []
+
+    def batches():
+        try:
+            yield [(1, "producto", "tn", "885,24")]
+        finally:
+            events.append("closed")
+
+    class Cursor:
+        def execute(self, statement): pass
+        def executemany(self, statement, rows): raise RuntimeError("simulated")
+
+    with pytest.raises(RuntimeError, match="simulated"):
+        PostgresReplica("unused").replace_table(Cursor(), mapping, batches())
+    assert events == ["closed"]
+
 
 
 def test_config_supports_windows_path_and_environment_dsn(tmp_path):
