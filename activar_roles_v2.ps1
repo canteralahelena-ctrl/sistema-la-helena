@@ -68,19 +68,13 @@ try {
     if (-not (Test-Path -LiteralPath $candidateConfig) -or -not (Test-Path -LiteralPath $candidateReader)) {
         throw "La validación no generó los candidatos privados esperados."
     }
-    Set-PrivateAcl $candidateConfig
-    Set-PrivateAcl $candidateReader
-
     Move-Item -LiteralPath $candidateReader -Destination $readerPath -Force
-    Set-PrivateAcl $readerPath
     [IO.File]::Replace($candidateConfig, $configPath, $null, $true)
     $configSwapped = $true
-    Set-PrivateAcl $configPath
 }
 catch {
     if ($configSwapped -and (Test-Path -LiteralPath $backupPath)) {
         Copy-Item -LiteralPath $backupPath -Destination $configPath -Force
-        Set-PrivateAcl $configPath
     }
     throw
 }
