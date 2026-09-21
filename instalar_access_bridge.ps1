@@ -109,9 +109,25 @@ $action = New-ScheduledTaskAction -Execute $powershellExe -Argument $arguments -
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(5) -RepetitionInterval (New-TimeSpan -Minutes 15)
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
 $principal = New-ScheduledTaskPrincipal -UserId $windowsUser -LogonType Interactive -RunLevel Limited
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description "Replica Access solo lectura a PostgreSQL" -Force | Out-Null
-
-& (Join-Path $root "validar_access_bridge.ps1") -InstallDir $installFull
-if ($LASTEXITCODE -ne 0) { throw "La validación operativa falló." }
-if (Test-Path -LiteralPath $backupApp) { Remove-Item -LiteralPath $backupApp -Recurse -Force }
+$previousTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+$previousTaskXml = if ($previousTask) { Export-ScheduledTask -TaskName $taskName } else { $null }
+try {
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description "Replica Access solo lectura a PostgreSQL" -Force | Out-Null
+    & (Join-Path $root "validar_access_bridge.ps1") -InstallDir $installFull
+    if ($LASTEXITCODE -ne 0) { throw "La validación operativa falló." }
+    if (Test-Path -LiteralPath $backupApp) { Remove-Item -LiteralPath $backupApp -Recurse -Force }
+}
+catch {
+    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+    if ($previousTaskXml) { Register-ScheduledTask -TaskName $taskName -Xml $previousTaskXml -Force | Out-Null }
+    if (Test-Path -LiteralPath $backupApp) {
+        $failedApp = Join-Path $installFull ("app.failed." + [Guid]::NewGuid().ToString("N"))
+        if (Test-Path -LiteralPath $appDir) { Move-Item -LiteralPath $appDir -Destination $failedApp }
+        Move-Item -LiteralPath $backupApp -Destination $appDir
+    }
+    elseif (Test-Path -LiteralPath $appDir) {
+        Remove-Item -LiteralPath $appDir -Recurse -Force
+    }
+    throw
+}
 Write-Host "INSTALACION_OPERATIVA: OK (sin migraciones ni provisión de roles)" -ForegroundColor Green
