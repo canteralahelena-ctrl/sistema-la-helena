@@ -7,6 +7,7 @@ $readerPath = Join-Path $InstallDir "chatgpt-reader-v2.json"
 $backupPath = Join-Path $InstallDir "bridge.pre-v2.json"
 $candidateConfig = Join-Path $InstallDir ("bridge.v2.candidate." + [Guid]::NewGuid().ToString("N") + ".json")
 $candidateReader = Join-Path $InstallDir ("reader.v2.candidate." + [Guid]::NewGuid().ToString("N") + ".json")
+$ownerDsnFile = Join-Path $InstallDir ("owner.dsn." + [Guid]::NewGuid().ToString("N") + ".tmp")
 $taskName = "LaHelena-AccessBridge"
 $mutex = New-Object Threading.Mutex($false, "Local\LaHelenaAccessBridgeRolesV2")
 $hasMutex = $false
@@ -47,9 +48,22 @@ try {
     }
     New-Item -ItemType File -Path $candidateConfig -ErrorAction Stop | Out-Null
     New-Item -ItemType File -Path $candidateReader -ErrorAction Stop | Out-Null
+    New-Item -ItemType File -Path $ownerDsnFile -ErrorAction Stop | Out-Null
     Set-PrivateAcl $candidateConfig
     Set-PrivateAcl $candidateReader
-    & $python $helper --config $configPath --config-candidate $candidateConfig --reader-candidate $candidateReader
+    Set-PrivateAcl $ownerDsnFile
+    $secureOwnerDsn = Read-Host "Pegue la cadena DIRECTA de neondb_owner y presione ENTER" -AsSecureString
+    $ownerPtr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureOwnerDsn)
+    try {
+        $ownerDsn = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ownerPtr)
+        [IO.File]::WriteAllText($ownerDsnFile, $ownerDsn, (New-Object Text.UTF8Encoding($false)))
+    }
+    finally {
+        if ($ownerPtr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ownerPtr) }
+        $ownerDsn = $null
+        $secureOwnerDsn = $null
+    }
+    & $python $helper --config $configPath --config-candidate $candidateConfig --reader-candidate $candidateReader --owner-dsn-file $ownerDsnFile
     if ($LASTEXITCODE -ne 0) { throw "Falló la validación de los logins V2." }
     if (-not (Test-Path -LiteralPath $candidateConfig) -or -not (Test-Path -LiteralPath $candidateReader)) {
         throw "La validación no generó los candidatos privados esperados."
@@ -73,6 +87,7 @@ catch {
 finally {
     Remove-Item -LiteralPath $candidateConfig -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $candidateReader -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $ownerDsnFile -Force -ErrorAction SilentlyContinue
     if ($taskWasEnabled) { Enable-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue | Out-Null }
     if ($hasMutex) { $mutex.ReleaseMutex() }
     $mutex.Dispose()
