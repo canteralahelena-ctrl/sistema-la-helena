@@ -6,6 +6,7 @@ import pytest
 from admin.cutover_production_v2 import (
     READER_ROLE,
     SYNC_ROLE,
+    direct_dsn,
     redacted_error,
     role_dsn,
     write_private_candidate,
@@ -107,11 +108,22 @@ def test_powershell_wrapper_uses_atomic_replace_and_cleans_candidates():
     )
 
 
-def test_main_has_pooler_guard_and_sanitized_top_level_failure():
+def test_pooled_neon_conninfo_is_converted_to_direct_without_changing_options():
+    from psycopg.conninfo import conninfo_to_dict
+
+    pooled = OWNER_DSN.replace("ep-example.", "ep-example-pooler.")
+    parsed = conninfo_to_dict(direct_dsn(pooled))
+    assert parsed["host"] == "ep-example.us-east-2.aws.neon.tech"
+    assert parsed["dbname"] == "neondb"
+    assert parsed["sslmode"] == "require"
+    assert parsed["channel_binding"] == "require"
+
+
+def test_main_converts_pooler_and_has_sanitized_top_level_failure():
     source = (Path(__file__).parents[1] / "admin/cutover_production_v2.py").read_text(
         encoding="utf-8"
     )
-    assert '"-pooler" in source_config.get("host", "")' in source
+    assert "source_dsn = direct_dsn" in source
     assert "redacted_error" in source
     assert "except Exception" in source
     assert "traceback" not in source.lower()
