@@ -51,6 +51,20 @@ class AccessReader:
         finally:
             cursor.close()
 
+    def diagnose(self, mappings: tuple[TableMapping, ...]) -> dict[str, bool]:
+        """Check that every allowlisted source can be selected without reading rows."""
+        result: dict[str, bool] = {}
+        for mapping in mappings:
+            sql = f"{select_sql(mapping)} WHERE 1 = 0"
+            assert_read_only_sql(sql)
+            cursor = self.connection.cursor()
+            try:
+                cursor.execute(sql)
+                result[mapping.access_table] = True
+            finally:
+                cursor.close()
+        return result
+
     def __exit__(self, *_: object) -> None:
         if self.connection is not None:
             try:
