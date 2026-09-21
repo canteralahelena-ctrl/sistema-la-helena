@@ -34,11 +34,6 @@ CREATE INDEX IF NOT EXISTS ix_detalles_comprobante ON replica.comprobante_detall
 CREATE INDEX IF NOT EXISTS ix_pagos_cliente_fecha ON replica.pagos(id_cliente_texto, fecha);
 CREATE INDEX IF NOT EXISTS ix_entregas_vencimiento ON replica.entregas(fecha_cobro) WHERE estado = 'EN CAJA';
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'helena_bridge_reader') THEN
-    CREATE ROLE helena_bridge_reader NOLOGIN;
-  END IF;
-END $$;
-GRANT USAGE ON SCHEMA replica TO helena_bridge_reader;
-GRANT SELECT ON ALL TABLES IN SCHEMA replica TO helena_bridge_reader;
-ALTER DEFAULT PRIVILEGES IN SCHEMA replica GRANT SELECT ON TABLES TO helena_bridge_reader;
+-- Los roles y sus credenciales no forman parte de las migraciones de esquema.
+-- Se aprovisionan por separado con admin/neon_roles_v2.sql usando una conexión
+-- directa del propietario y nunca con el DSN operativo del sincronizador.
