@@ -125,6 +125,16 @@ def test_migrations_define_expected_read_views_and_reader_guard():
     assert not any(word in sql.upper() for word in (" ACCESS UPDATE ", " ACCESS DELETE "))
 
 
+def test_admin_scripts_separate_schema_roles_and_cutover():
+    apply_schema = Path("admin/apply_schema.sql").read_text(encoding="utf-8")
+    cutover = Path("admin/neon_roles_v2_cutover.sql").read_text(encoding="utf-8")
+    assert "migrations/001_replica_schema.sql" in apply_schema
+    assert "CREATE ROLE" not in apply_schema
+    assert "pg_auth_members" in cutover
+    assert "NOLOGIN" in cutover
+    assert "DROP ROLE" not in cutover
+
+
 def test_examples_contain_no_secret():
     example = json.loads(Path("config/bridge.example.json").read_text(encoding="utf-8"))
     assert example["postgres_dsn"] == ""
