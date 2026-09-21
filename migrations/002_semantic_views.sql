@@ -73,4 +73,5 @@ SELECT current_date fecha,
  (SELECT COALESCE(sum(saldo),0) FROM replica.v_saldos_clientes WHERE saldo > 0) deuda_clientes,
  (SELECT COALESCE(sum(importe),0) FROM replica.v_cheques_vencimiento) cheques_en_cartera;
 
-GRANT SELECT ON ALL TABLES IN SCHEMA replica TO helena_bridge_reader;
+-- Los GRANT operativos se administran fuera de las migraciones. Véase
+-- admin/neon_roles_v2.sql.
