@@ -125,10 +125,11 @@ queda en `chatgpt-reader-v2.json`. Los tres archivos permiten acceso únicamente
 al usuario Windows actual y a `SYSTEM`. La tarea programada queda deshabilitada
 durante el corte y se restaura al terminar. Ninguna clave se imprime.
 
-El helper exige una conexión directa a `neondb`, con TLS (`sslmode=require` o
+El helper usa una conexión directa a `neondb`, con TLS (`sslmode=require` o
 verificación superior), y una sesión existente de `helena_bridge_sync` o
-`neondb_owner`. No aplica esquema, no desactiva los roles anteriores y no toca
-Access.
+`neondb_owner`. Si el `bridge.json` contiene el endpoint agrupado de Neon
+(`-pooler`), deriva automáticamente el endpoint directo equivalente antes de
+validarlo. No aplica esquema, no desactiva los roles anteriores y no toca Access.
 
 ## 4. Cutover de seguridad
 
