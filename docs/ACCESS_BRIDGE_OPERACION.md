@@ -27,6 +27,13 @@ el comando, en el repositorio, en capturas ni en el chat.
 
 ## 1. Crear roles mínimos V2 en la rama de prueba
 
+Si la rama no contiene todavía el esquema, aplíquelo primero con la conexión
+directa del propietario. Este paso no crea usuarios ni guarda secretos:
+
+```powershell
+psql "$env:HELENA_OWNER_DIRECT_DSN" -f .\admin\apply_schema.sql
+```
+
 Desde la raíz del checkout, con `psql` disponible:
 
 ```powershell
@@ -158,6 +165,12 @@ estar instalado con la misma arquitectura que Python.
 
 La fuente del servidor sólo se copia. El `.accdb` local se abre con
 `READONLY=TRUE;Mode=Read`; el puente no escribe Access.
+
+La tarea usa el token interactivo del mismo usuario Windows para conservar
+acceso a la ruta UNC sin almacenar su contraseña. Por eso requiere que ese
+usuario haya iniciado sesión; después de cerrar sesión no se promete ejecución
+en segundo plano. Cambiar a un usuario de servicio es una decisión operativa
+separada que exige administrar una credencial Windows con acceso al recurso.
 
 ## Diagnóstico y validación end-to-end
 
