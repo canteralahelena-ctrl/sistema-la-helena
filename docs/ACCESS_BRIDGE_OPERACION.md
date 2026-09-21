@@ -125,6 +125,8 @@ cambia `postgres_dsn`. Antes guarda `bridge.pre-v2.json`; la credencial lectora
 queda en `chatgpt-reader-v2.json`. Los tres archivos permiten acceso únicamente
 al usuario Windows actual y a `SYSTEM`. La tarea programada queda deshabilitada
 durante el corte y se restaura al terminar. Ninguna clave se imprime.
+Los contenedores temporales reciben esa ACL antes de guardar secretos; no se
+reaplica después, evitando requerir `SeSecurityPrivilege` en PowerShell normal.
 
 El helper usa una conexión directa a `neondb`, con TLS (`sslmode=require` o
 verificación superior), y una sesión existente de `helena_bridge_sync` o
