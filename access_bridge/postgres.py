@@ -3,11 +3,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
 import re
 from typing import Any, Iterable, Iterator
 
-from .catalog import TableMapping
+from .catalog import MAPPINGS, TableMapping
 
 
 TEXT_COLUMNS = {
@@ -116,32 +115,6 @@ class PostgresReplica:
         self.connection = self._connector(self.dsn)
         return self
 
-    def migrate(self, migration_dir: Path) -> None:
-        cursor = self.connection.cursor()
-        for path in sorted(migration_dir.glob("*.sql")):
-            cursor.execute(path.read_text(encoding="utf-8"))
-        self.connection.commit()
-
-    def provision_reader(self, username: str, password: str) -> None:
-        if not username.replace("_", "").isalnum() or not username:
-            raise ValueError("Nombre de usuario PostgreSQL inválido.")
-        if len(password) < 16:
-            raise ValueError("La clave del conector debe tener al menos 16 caracteres.")
-        try:
-            from psycopg import sql
-        except ImportError as exc:
-            raise RuntimeError("Falta psycopg; ejecute el instalador del puente.") from exc
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (username,))
-        identifier = sql.Identifier(username)
-        if cursor.fetchone():
-            cursor.execute(sql.SQL("ALTER ROLE {} LOGIN PASSWORD %s").format(identifier), (password,))
-        else:
-            cursor.execute(sql.SQL("CREATE ROLE {} LOGIN PASSWORD %s").format(identifier), (password,))
-        cursor.execute(sql.SQL("GRANT helena_bridge_reader TO {}").format(identifier))
-        cursor.execute(sql.SQL("ALTER ROLE {} SET default_transaction_read_only = on").format(identifier))
-        self.connection.commit()
-
     @contextmanager
     def sync_run(self) -> Iterator[Any]:
         cursor = self.connection.cursor()
@@ -173,6 +146,84 @@ class PostgresReplica:
             if callable(close):
                 close()
         return total
+
+    def latest_snapshot(self, cursor: Any) -> tuple[str | None, dict[str, int]]:
+        import json
+
+        cursor.execute(
+            "SELECT source_fingerprint, row_counts "
+            "FROM replica.sync_runs "
+            "WHERE status IN ('ok', 'skipped') AND source_fingerprint IS NOT NULL "
+            "ORDER BY finished_at DESC NULLS LAST, id DESC LIMIT 1"
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None, {}
+        counts = row[1]
+        if isinstance(counts, str):
+            counts = json.loads(counts)
+        if not isinstance(counts, dict):
+            counts = {}
+        return row[0], {str(key): int(value) for key, value in counts.items()}
+
+    def table_count(self, cursor: Any, mapping: TableMapping) -> int:
+        # target_table is not caller input: it comes exclusively from MAPPINGS.
+        cursor.execute(f'SELECT count(*) FROM replica."{mapping.target_table}"')
+        return int(cursor.fetchone()[0])
+
+    def record_run(
+        self,
+        cursor: Any,
+        *,
+        started_at: datetime,
+        finished_at: datetime,
+        status: str,
+        source_fingerprint: str,
+        row_counts: dict[str, int],
+    ) -> None:
+        import json
+
+        if status not in {"ok", "skipped"}:
+            raise ValueError("Estado de sincronización inválido.")
+        cursor.execute(
+            "INSERT INTO replica.sync_runs"
+            "(started_at, finished_at, status, source_fingerprint, row_counts) "
+            "VALUES (%s,%s,%s,%s,%s::jsonb)",
+            (started_at, finished_at, status, source_fingerprint, json.dumps(row_counts)),
+        )
+
+    def diagnose_schema(self) -> dict[str, bool]:
+        """Perform SELECT-only checks; this method never commits or changes schema."""
+        cursor = self.connection.cursor()
+        try:
+            result: dict[str, bool] = {}
+            for mapping in MAPPINGS:
+                relation = f"replica.{mapping.target_table}"
+                cursor.execute("SELECT to_regclass(%s)", (relation,))
+                result[mapping.target_table] = cursor.fetchone()[0] is not None
+            cursor.execute("SELECT to_regclass('replica.sync_runs')")
+            result["sync_runs"] = cursor.fetchone()[0] is not None
+            self.connection.rollback()
+            return result
+        except Exception:
+            self.connection.rollback()
+            raise
+        finally:
+            cursor.close()
+
+    def latest_run_id(self) -> int | None:
+        """Return the newest synchronization id using a SELECT-only query."""
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("SELECT max(id) FROM replica.sync_runs")
+            value = cursor.fetchone()[0]
+            self.connection.rollback()
+            return None if value is None else int(value)
+        except Exception:
+            self.connection.rollback()
+            raise
+        finally:
+            cursor.close()
 
     def __exit__(self, *_: object) -> None:
         if self.connection is not None:
