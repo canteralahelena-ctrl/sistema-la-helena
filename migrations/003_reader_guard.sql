@@ -1,4 +1,3 @@
--- Defensa adicional para el rol que usará el conector ChatGPT.
-ALTER ROLE helena_bridge_reader SET default_transaction_read_only = on;
-REVOKE CREATE ON SCHEMA public FROM helena_bridge_reader;
-REVOKE CREATE ON SCHEMA replica FROM helena_bridge_reader;
+-- Conservado como migración histórica, ahora deliberadamente sin operaciones
+-- administrativas. Los roles se gestionan con admin/neon_roles_v2.sql.
+SELECT 1;
