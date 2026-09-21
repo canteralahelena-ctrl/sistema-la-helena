@@ -8,6 +8,7 @@ $backupPath = Join-Path $InstallDir "bridge.pre-v2.json"
 $candidateConfig = Join-Path $InstallDir ("bridge.v2.candidate." + [Guid]::NewGuid().ToString("N") + ".json")
 $candidateReader = Join-Path $InstallDir ("reader.v2.candidate." + [Guid]::NewGuid().ToString("N") + ".json")
 $ownerDsnFile = Join-Path $InstallDir ("owner.dsn." + [Guid]::NewGuid().ToString("N") + ".tmp")
+$replaceBackup = Join-Path $InstallDir ("bridge.replace." + [Guid]::NewGuid().ToString("N") + ".bak")
 $taskName = "LaHelena-AccessBridge"
 $mutex = New-Object Threading.Mutex($false, "Local\LaHelenaAccessBridgeRolesV2")
 $hasMutex = $false
@@ -69,8 +70,9 @@ try {
         throw "La validación no generó los candidatos privados esperados."
     }
     Move-Item -LiteralPath $candidateReader -Destination $readerPath -Force
-    [IO.File]::Replace($candidateConfig, $configPath, $null, $true)
+    [IO.File]::Replace($candidateConfig, $configPath, $replaceBackup, $true)
     $configSwapped = $true
+    Remove-Item -LiteralPath $replaceBackup -Force -ErrorAction SilentlyContinue
 }
 catch {
     if ($configSwapped -and (Test-Path -LiteralPath $backupPath)) {
@@ -82,6 +84,7 @@ finally {
     Remove-Item -LiteralPath $candidateConfig -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $candidateReader -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $ownerDsnFile -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $replaceBackup -Force -ErrorAction SilentlyContinue
     if ($taskWasEnabled) { Enable-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue | Out-Null }
     if ($hasMutex) { $mutex.ReleaseMutex() }
     $mutex.Dispose()
