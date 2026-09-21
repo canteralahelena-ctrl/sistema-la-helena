@@ -93,7 +93,9 @@ def test_powershell_wrapper_uses_atomic_replace_and_cleans_candidates():
     script = (Path(__file__).parents[1] / "activar_roles_v2.ps1").read_text(
         encoding="utf-8"
     )
-    assert "[IO.File]::Replace($candidateConfig, $configPath" in script
+    assert "[IO.File]::Replace($candidateConfig, $configPath, $replaceBackup, $true)" in script
+    assert "$replaceBackup = Join-Path $InstallDir" in script
+    assert "Remove-Item -LiteralPath $replaceBackup" in script
     assert "finally" in script
     assert "Remove-Item -LiteralPath $candidateConfig" in script
     assert "Remove-Item -LiteralPath $candidateReader" in script
