@@ -45,6 +45,15 @@ def role_dsn(source_dsn: str, role: str, password: str) -> str:
     return make_conninfo(**config)
 
 
+def direct_dsn(source_dsn: str) -> str:
+    """Return the direct Neon endpoint for a pooled or direct conninfo."""
+    config = conninfo_to_dict(source_dsn)
+    host = config.get("host", "")
+    if "-pooler" in host:
+        config["host"] = host.replace("-pooler", "", 1)
+    return make_conninfo(**config)
+
+
 def redact_text(text: str, sensitive_values: Iterable[str]) -> str:
     """Remove generated credentials from errors before they reach the console."""
     result = text
@@ -127,9 +136,7 @@ def activate(
     raw = json.loads(config_path.read_text(encoding="utf-8-sig"))
     if not isinstance(raw, dict) or not raw.get("postgres_dsn"):
         raise RuntimeError("bridge.json no contiene postgres_dsn.")
-    source_dsn = str(raw["postgres_dsn"])
-    if "-pooler" in conninfo_to_dict(source_dsn).get("host", ""):
-        raise RuntimeError("El corte exige una conexión directa, no pooled.")
+    source_dsn = direct_dsn(str(raw["postgres_dsn"]))
     passwords = {SYNC_ROLE: password_factory(), READER_ROLE: password_factory()}
 
     try:
@@ -212,10 +219,8 @@ def main() -> int:
     raw = json.loads(args.config.read_text(encoding="utf-8-sig"))
     if not isinstance(raw, dict) or not raw.get("postgres_dsn"):
         raise RuntimeError("bridge.json no contiene postgres_dsn.")
-    source_dsn = str(raw["postgres_dsn"])
+    source_dsn = direct_dsn(str(raw["postgres_dsn"]))
     source_config = conninfo_to_dict(source_dsn)
-    if "-pooler" in source_config.get("host", ""):
-        raise RuntimeError("El corte exige una conexión directa, no pooled.")
     if source_config.get("dbname") != "neondb":
         raise RuntimeError("La conexión no corresponde a la base neondb.")
     if source_config.get("sslmode") not in {"require", "verify-ca", "verify-full"}:
