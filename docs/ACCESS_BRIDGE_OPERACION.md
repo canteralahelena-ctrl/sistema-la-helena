@@ -117,8 +117,9 @@ hacerse sin copiar ni mostrar claves. Desde la raíz del checkout actualizado:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\activar_roles_v2.ps1
 ```
 
-El comando usa el `bridge.json` privado existente para asignar claves aleatorias
-a ambos logins V2, prueba conexiones reales (DML reversible y DDL bloqueado para
+El comando solicita una sola vez, mediante entrada oculta, la cadena directa de
+`neondb_owner`; la usa en un archivo temporal protegido y la elimina al terminar.
+Con ella asigna claves aleatorias a ambos logins V2 y prueba conexiones reales (DML reversible y DDL bloqueado para
 sync; lectura permitida y escritura bloqueada para reader) y sólo entonces
 cambia `postgres_dsn`. Antes guarda `bridge.pre-v2.json`; la credencial lectora
 queda en `chatgpt-reader-v2.json`. Los tres archivos permiten acceso únicamente
