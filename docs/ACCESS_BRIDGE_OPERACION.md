@@ -110,6 +110,26 @@ Sólo después del `PASS` en la rama:
 Durante todos esos pasos, los roles anteriores permanecen activos. No se
 deshabilitan antes de confirmar ambos caminos V2.
 
+Cuando los roles y grupos V2 ya existen en producción, el corte local puede
+hacerse sin copiar ni mostrar claves. Desde la raíz del checkout actualizado:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\activar_roles_v2.ps1
+```
+
+El comando usa el `bridge.json` privado existente para asignar claves aleatorias
+a ambos logins V2, prueba conexiones reales (DML reversible y DDL bloqueado para
+sync; lectura permitida y escritura bloqueada para reader) y sólo entonces
+cambia `postgres_dsn`. Antes guarda `bridge.pre-v2.json`; la credencial lectora
+queda en `chatgpt-reader-v2.json`. Los tres archivos permiten acceso únicamente
+al usuario Windows actual y a `SYSTEM`. La tarea programada queda deshabilitada
+durante el corte y se restaura al terminar. Ninguna clave se imprime.
+
+El helper exige una conexión directa a `neondb`, con TLS (`sslmode=require` o
+verificación superior), y una sesión existente de `helena_bridge_sync` o
+`neondb_owner`. No aplica esquema, no desactiva los roles anteriores y no toca
+Access.
+
 ## 4. Cutover de seguridad
 
 Primero identifique los nombres exactos de los logins anteriores. Después, y
