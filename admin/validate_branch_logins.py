@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import secrets
 
 import psycopg
@@ -37,6 +38,9 @@ def main() -> int:
     owner_dsn = os.environ.get("HELENA_TEST_OWNER_DSN", "")
     if not owner_dsn:
         raise RuntimeError("Falta HELENA_TEST_OWNER_DSN.")
+    match = re.search(r"postgres(?:ql)?://[^\s'\"`]+", owner_dsn)
+    if match:
+        owner_dsn = match.group(0)
     owner_config = conninfo_to_dict(owner_dsn)
     if "-pooler" in owner_config.get("host", ""):
         raise RuntimeError("La conexión debe ser directa, no pooled.")
