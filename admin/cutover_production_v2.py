@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import secrets
 import tempfile
 import sys
@@ -20,7 +21,7 @@ EXPECTED_GROUPS = {
     SYNC_ROLE: "helena_bridge_sync_privs_v2",
     READER_ROLE: "helena_bridge_reader_privs_v2",
 }
-ALLOWED_ADMINISTRATORS = {"helena_bridge_sync", "neondb_owner"}
+ALLOWED_ADMINISTRATORS = {"neondb_owner"}
 
 
 def redacted_error(
@@ -47,6 +48,9 @@ def role_dsn(source_dsn: str, role: str, password: str) -> str:
 
 def direct_dsn(source_dsn: str) -> str:
     """Return the direct Neon endpoint for a pooled or direct conninfo."""
+    match = re.search(r"postgres(?:ql)?://[^\s'\"`]+", source_dsn)
+    if match:
+        source_dsn = match.group(0)
     config = conninfo_to_dict(source_dsn)
     host = config.get("host", "")
     if "-pooler" in host:
@@ -211,6 +215,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--config-candidate", type=Path, required=True)
     parser.add_argument("--reader-candidate", type=Path, required=True)
+    parser.add_argument("--owner-dsn-file", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -219,7 +224,10 @@ def main() -> int:
     raw = json.loads(args.config.read_text(encoding="utf-8-sig"))
     if not isinstance(raw, dict) or not raw.get("postgres_dsn"):
         raise RuntimeError("bridge.json no contiene postgres_dsn.")
-    source_dsn = direct_dsn(str(raw["postgres_dsn"]))
+    owner_dsn = args.owner_dsn_file.read_text(encoding="utf-8-sig").strip()
+    if not owner_dsn:
+        raise RuntimeError("No se recibió la conexión privada de neondb_owner.")
+    source_dsn = direct_dsn(owner_dsn)
     source_config = conninfo_to_dict(source_dsn)
     if source_config.get("dbname") != "neondb":
         raise RuntimeError("La conexión no corresponde a la base neondb.")
